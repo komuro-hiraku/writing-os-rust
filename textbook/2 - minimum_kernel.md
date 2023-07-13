@@ -27,3 +27,20 @@ https://os.phil-opp.com/ja/minimal-rust-kernel/
 
 - ブートローダーの標準規格
 - GNU GRUBが代表的
+
+## Build Target
+
+- ABI is 何: https://stackoverflow.com/questions/2171177/what-is-an-application-binary-interface-abi/2456882#2456882
+    - Application Binary Interface らしい
+3
+## Disable Redzone
+
+- https://os.phil-opp.com/red-zone/
+- 割り込みを処理する場合、スタックポインタ最適化を無効化しないとダメらしい
+
+## SIMD無効化
+
+- 単一命令で複数のデータを扱う命令セット
+- 色々複雑なので性能上問題になることも
+- https://os.phil-opp.com/disable-simd/
+- 浮動小数点演算ではSIMDレジスタを利用するため、SIMD無効化するとこれが使えない。これを解決するのが `soft-float` でエミュレートする
