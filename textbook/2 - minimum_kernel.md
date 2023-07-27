@@ -49,7 +49,7 @@ https://os.phil-opp.com/ja/minimal-rust-kernel/
 
 ```bash
 cargo build --target x86_64-blog_os.json
-   Compiling blog_os v0.1.0 (/Users/hiraku.komuro/Develop/rust/writing-os-rust)
+   Compiling blog_os v0.1.0 (/Develop/rust/writing-os-rust)
 warning: target json file contains unused fields: executable
 
 error[E0463]: can't find crate for `core`
@@ -292,11 +292,11 @@ info: installing component 'llvm-tools'
 - bootimage を作る
 
 ```bash
-cargo bootimage                                                                                                                                   hiraku.komuro@tcc-pma-000965
+cargo bootimage
 WARNING: `CARGO_MANIFEST_DIR` env variable not set
 Building kernel
    Compiling bootloader v0.9.23
-   Compiling blog_os v0.1.0 (/Users/hiraku.komuro/Develop/rust/writing-os-rust)
+   Compiling blog_os v0.1.0 (/Develop/rust/writing-os-rust)
     Finished dev [unoptimized + debuginfo] target(s) in 0.67s
 Building bootloader
     Updating crates.io index
