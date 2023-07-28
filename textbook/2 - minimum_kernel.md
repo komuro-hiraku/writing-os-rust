@@ -328,3 +328,25 @@ qemu-system-x86_64 -drive format=raw,file=/Develop/rust/writing-os-rust/target/x
 ```
 
 ![boot helloworld](./image/boot_helloworld.png)
+
+### cargo run で起動する
+
+- いちいちQEMUを起動するのが面倒くさい
+- `.cargo/config.toml` に以下を追加
+
+```toml
+[target.'cfg(target_os = "none")']
+runner = "bootimage runner"
+```
+
+起動した
+
+```bash
+cargo run                                                                                                                                         hiraku.komuro@tcc-pma-000965
+    Finished dev [unoptimized + debuginfo] target(s) in 0.07s
+     Running `bootimage runner target/x86_64-blog_os/debug/blog_os`
+Building bootloader
+    Finished release [optimized + debuginfo] target(s) in 0.04s
+Running: `qemu-system-x86_64 -drive format=raw,file=target/x86_64-blog_os/debug/bootimage-blog_os.bin`
+```
+
