@@ -43,3 +43,5 @@ https://os.phil-opp.com/ja/vga-text-mode/
 [dependencies]
 volatile = "0.2.6"
 ```
+
+- Buffer 定義を修正する
