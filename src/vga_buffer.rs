@@ -16,14 +16,14 @@ macro_rules! println {
     ($($arg:tt)*) => ($crate::print!("{}\n", format_args!($($arg)*)));
 }
 
-#[doc(hidden)]  // 生成されたドキュメントからから不可視になる
+#[doc(hidden)] // 生成されたドキュメントからから不可視になる
 pub fn _print(args: fmt::Arguments) {
     use core::fmt::Write;
     WRITER.lock().write_fmt(args).unwrap();
 }
 
 #[allow(dead_code)] // NOTE: 使われてないコードの警告を抑止
-#[derive(Debug,Clone,Copy,PartialEq,Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)] // NOTE: 色は4bitで表現されているので u4 で十分だけど存在しないので u8
 pub enum Color {
     Black = 0,
@@ -55,7 +55,7 @@ impl ColorCode {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-#[repr(C)]  // NOTE: C言語の構造体と同じようにFieldを並べるのを保証してくれる
+#[repr(C)] // NOTE: C言語の構造体と同じようにFieldを並べるのを保証してくれる
 struct ScreenChar {
     ascii_character: u8,
     color_code: ColorCode,
@@ -64,7 +64,7 @@ struct ScreenChar {
 const BUFFER_HEIGHT: usize = 25;
 const BUFFER_WIDTH: usize = 80;
 
-#[repr(transparent)]    // NOTE: Fieldが単一もしくは0個の時に同じメモリレイアウトを保証してくれるやつ
+#[repr(transparent)] // NOTE: Fieldが単一もしくは0個の時に同じメモリレイアウトを保証してくれるやつ
 struct Buffer {
     chars: [[Volatile<ScreenChar>; BUFFER_WIDTH]; BUFFER_HEIGHT],
 }
@@ -72,7 +72,7 @@ struct Buffer {
 pub struct Writer {
     column_position: usize, // NOTE: どこまで書き込んだかの行を記録
     color_code: ColorCode,
-    buffer: &'static mut Buffer,    // NOTE: プログラム起動中はずっと保持される
+    buffer: &'static mut Buffer, // NOTE: プログラム起動中はずっと保持される
 }
 
 impl Writer {
@@ -88,11 +88,12 @@ impl Writer {
                 let col = self.column_position;
 
                 let color_code = self.color_code;
-                self.buffer.chars[row][col].write(ScreenChar {  // NOTE: 行目一杯まで読む
+                self.buffer.chars[row][col].write(ScreenChar {
+                    // NOTE: 行目一杯まで読む
                     ascii_character: byte,
-                    color_code
+                    color_code,
                 });
-                self.column_position += 1;  // 読み進め
+                self.column_position += 1; // 読み進め
             }
         }
     }
@@ -112,17 +113,17 @@ impl Writer {
         let mut writer = Writer {
             column_position: 0,
             color_code: ColorCode::new(Color::Yellow, Color::Black),
-            buffer: unsafe { &mut *(0xb8000 as *mut Buffer)},
+            buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
         };
 
         writer.write_byte(b'H');
         writer.write_string("ello ");
         // writer.write_string("Wörld!");
 
-        write!(writer, "The numbers are {} and {}", 42, 1.0/3.0).unwrap();
+        write!(writer, "The numbers are {} and {}", 42, 1.0 / 3.0).unwrap();
     }
 
-    fn new_line(&mut self) { 
+    fn new_line(&mut self) {
         for row in 1..BUFFER_HEIGHT {
             for col in 0..BUFFER_WIDTH {
                 let character = self.buffer.chars[row][col].read();
@@ -133,7 +134,7 @@ impl Writer {
         self.column_position = 0;
     }
 
-    fn clear_row(&mut self, row: usize) { 
+    fn clear_row(&mut self, row: usize) {
         let blank = ScreenChar {
             ascii_character: b' ',
             color_code: self.color_code,
@@ -142,7 +143,7 @@ impl Writer {
         for col in 0..BUFFER_WIDTH {
             self.buffer.chars[row][col].write(blank);
         }
-     }
+    }
 }
 
 // NOTE: write!/writeln! フォーマットマクロを使えるようにする
@@ -154,12 +155,10 @@ impl fmt::Write for Writer {
 }
 
 // global interface
-lazy_static! { 
+lazy_static! {
     pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer {
         column_position: 0,
         color_code: ColorCode::new(Color::Yellow, Color::Black),
-        buffer: unsafe {
-            &mut *(0xb8000 as *mut Buffer)
-        }
+        buffer: unsafe { &mut *(0xb8000 as *mut Buffer) }
     });
 }

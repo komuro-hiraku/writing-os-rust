@@ -1,11 +1,12 @@
-#![no_std]  // 標準ライブラリの使用を許さない
+#![no_std] // 標準ライブラリの使用を許さない
 #![no_main] // 通常のエントリポイントは使用しない
 
-use core::{panic::PanicInfo, fmt::Write};
+use core::{fmt::Write, panic::PanicInfo};
 mod vga_buffer;
 
 #[panic_handler]
-fn panic(_info: &PanicInfo) -> ! {
+fn panic(info: &PanicInfo) -> ! {
+    println!("{}", info);
     loop {}
 }
 
@@ -17,6 +18,8 @@ pub extern "C" fn _start() -> ! {
 
     vga_buffer::WRITER.lock().write_str("Hello Again").unwrap();
     write!(vga_buffer::WRITER.lock(), "some numbers: {} {}", 42, 1.337).unwrap();
+
+    // panic!("Something Error");
 
     loop {}
 }

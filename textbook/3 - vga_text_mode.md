@@ -116,3 +116,7 @@ macro_rules! println {
 - `print`, `println` マクロを修正
 - `($($arg:tt)*)` これはマクロ独自の何かか？？
 
+## Panicメッセージ出力
+
+- `println!` マクロができたので Panic時にメッセージを出力できるようになった
+
