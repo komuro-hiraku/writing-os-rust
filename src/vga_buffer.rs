@@ -4,6 +4,24 @@ use lazy_static::lazy_static;
 use spin::Mutex;
 use volatile::Volatile;
 
+/// Macro
+#[macro_export]
+macro_rules! print {
+    ($($arg:tt)*) => ($crate::vga_buffer::_print(format_args!($($arg)*)));
+}
+
+#[macro_export]
+macro_rules! println {
+    () => {$crate::print("\n")};
+    ($($arg:tt)*) => ($crate::print!("{}\n", format_args!($($arg)*)));
+}
+
+#[doc(hidden)]  // 生成されたドキュメントからから不可視になる
+pub fn _print(args: fmt::Arguments) {
+    use core::fmt::Write;
+    WRITER.lock().write_fmt(args).unwrap();
+}
+
 #[allow(dead_code)] // NOTE: 使われてないコードの警告を抑止
 #[derive(Debug,Clone,Copy,PartialEq,Eq)]
 #[repr(u8)] // NOTE: 色は4bitで表現されているので u4 で十分だけど存在しないので u8

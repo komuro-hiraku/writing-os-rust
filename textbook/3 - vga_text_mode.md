@@ -90,3 +90,29 @@ lazy_static = {version = "1.0", features = ["spin_no_std"]}
 - 単純な Mutex＝Spinlock
 - `spin` クレートを追加する
 
+### 安全性
+
+- unsafe ブロックは局所的
+- それ以外のインタフェースは Rust によってチェックされるので安全安心
+
+## println マクロ
+
+- 標準ライブラリ実装
+    - https://doc.rust-lang.org/nightly/std/macro.println.html
+```rs
+#[macro_export]
+macro_rules! println {
+    () => (print!("\n"));
+    ($($arg:tt)*) => (print!("{}\n", format_args!($($arg)*)));
+}
+```
+
+- `#[macro_export]` クレート全体、外部クレートで使えるようにする属性
+- `print!` マクロの呼び出し
+    - `format_args!` マクロ呼び出して `fmt::Arguments` 型を作成
+    - `$crate::io::_print` に引き渡し
+        - いろんな `Stdout` デバイスの実装があるため超複雑
+        - VGAバッファに出力したいだけなので、同じ実装だとファットすぎる
+- `print`, `println` マクロを修正
+- `($($arg:tt)*)` これはマクロ独自の何かか？？
+
