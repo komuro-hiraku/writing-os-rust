@@ -1,5 +1,7 @@
 use core::fmt;
 
+use lazy_static::lazy_static;
+use spin::Mutex;
 use volatile::Volatile;
 
 #[allow(dead_code)] // NOTE: 使われてないコードの警告を抑止
@@ -131,4 +133,15 @@ impl fmt::Write for Writer {
         self.write_string(s);
         Ok(())
     }
+}
+
+// global interface
+lazy_static! { 
+    pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer {
+        column_position: 0,
+        color_code: ColorCode::new(Color::Yellow, Color::Black),
+        buffer: unsafe {
+            &mut *(0xb8000 as *mut Buffer)
+        }
+    });
 }
