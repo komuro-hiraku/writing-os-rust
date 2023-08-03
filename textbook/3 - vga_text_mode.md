@@ -120,3 +120,61 @@ macro_rules! println {
 
 - `println!` マクロができたので Panic時にメッセージを出力できるようになった
 
+## error[E0152] duplicate lang item in crate `core`
+
+- `cargo test` を実行すると上記エラーが出る
+    - `panic="abort"` を指定しているのが問題
+    - 詳細はこちら https://github.com/rust-lang/cargo/issues/7359
+    - 手っ取り早いのは `Cargo.toml`からこの記述を消す
+- test 実行しても `_start` が Call されてしまう
+    - test_runner が実行されていない
+    - 独自テストフレームワークを使っていてこれは `main` を期待するが `#[no_main]` 属性によって main 関数がエントリポイントになっていない
+    - 以下で `test_main` （生成されるやつ）をみるように修正
+
+```rs
+#![reexport_test_harness_main = "test_main"]
+```
+
+- `#[cfg(test)]` で条件付きコンパイル（テストの時だけ
+
+## QEMU を終了
+
+- テストごとにQEMU手動で落とさないとダメ
+    - 面倒すぎる
+- OSシャットダウンが正攻法
+    - ただし APM, ACPIパワーマネジメント標準規格のサポート実装があって複雑
+- QEMU には `isa-debug-exit` デバイスがサポートされている
+    - `Cargo.toml` に以下を書いて QEMU に引数を渡す
+- `iobase=0xf4,iosize=0x04` I/Oポートを指定
+    - `0xf4` はx86では通常使われていないポート
+    - `iosize=0x0f` は4バイトのポートの大きさを示す
+
+### 終了デバイス
+
+- I/Oポートに値が書き込まれるとそれから終了ステータスを計算して終了する
+    - `(value << 1) | 1`
+    - 例: value=0 => 1, value=1 => 3
+- x86_64 Crate
+    - アセンブリ命令を手動で呼び出すのではなく、抽象化された形で実装する
+
+```bash
+error: test failed, to rerun pass `--bin blog_os`
+
+Caused by:
+  process didn't exit successfully: `bootimage runner /Develop/rust/writing-os-rust/target/x86_64-blog_os/debug/deps/blog_os-7f32dd94eb419a0b` (exit status: 33)
+```
+
+- cargo test は exit_code = 0 じゃないとエラーとみなす
+- `Cargo.toml` の `package.metadata.bootimage` に以下を追加する
+
+```toml
+test-success-exit-code =33
+```
+
+- QEMU でテスト実行しテスト終了後に落とすという動作ができた
+
+## コンソール出力
+
+- テスト結果は現状QEMUで表示しているが、テスト終了後に落としてしまってるのでテスト結果は確認できない
+- コンソールに出力したい
+
