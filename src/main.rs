@@ -7,10 +7,23 @@
 
 use core::{fmt::Write, panic::PanicInfo};
 mod vga_buffer;
+mod serial;
 
+// 通常使うPanic Handler
+#[cfg(not(test))]
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     println!("{}", info);
+    loop {}
+}
+
+// テストモードで使う Panic Handler
+#[cfg(test)]
+#[panic_handler]
+fn panic(info: &PanicInfo) -> ! {
+    serial_println!("[failed");
+    serial_println!("Error: {}", info);
+    exit_qemu(QemuExitCode::Failed);
     loop {}
 }
 
@@ -51,7 +64,7 @@ pub fn exit_qemu(exit_code: QemuExitCode) {
 /// Test
 #[cfg(test)]
 fn test_runner(tests: &[&dyn Fn()]) {
-    println!("Running {} tests", tests.len());
+    serial_println!("Running {} tests", tests.len());
     for test in tests {
         test();
     }
@@ -62,7 +75,9 @@ fn test_runner(tests: &[&dyn Fn()]) {
 
 #[test_case]
 fn trivial_assertion() {
-    print!("trivial assertion... ");
+    //print!("trivial assertion... ");
+    serial_print!("trivial asserition...");
     assert_eq!(1, 1);
-    println!("[ok]");
+    // println!("[ok]");
+    serial_println!("[ok]")
 }
