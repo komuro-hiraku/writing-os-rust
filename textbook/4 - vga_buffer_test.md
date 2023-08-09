@@ -56,7 +56,7 @@ test_main();
 - テスト終了後に QEMU を閉じたい
 - そこで Serial I/O を利用したメッセージ送信による QEMU の終了
 
-## Serial Port
+## 終了デバイス
 
 - `x86_64` クレートを使えばOK
     - `isa-debug-exit`
@@ -73,3 +73,68 @@ test_main();
     - `bootimage` のメタデータ設定に `test-success-exit-code` を追加する
         - (0x10 << 1) | 1 = 33
         - bootimage が 33 を 0 にマッピングする
+
+```rs
+/// QEMU Exit
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(u32)]
+pub enum QemuExitCode {
+    Success = 0x10,
+    Failed = 0x11,
+}
+
+pub fn exit_qemu(exit_code: QemuExitCode) {
+    unsafe {
+        use x86_64::instructions::port::Port;
+        let mut port = Port::new(0xf4); // I/OのBase
+        port.write(exit_code as u32);
+    }
+}
+```
+
+## 標準コンソールにテスト出力を行う
+
+- 現状 QEMU の画面にテスト出力が実行されてる
+    - 毎度 QEMU の画面を確認して閉じるのは大変。できればコンソールに出て欲しい
+- シリアルポート使った書き込みをサポート
+    - UART
+    - `uart_16550` Crate を使う
+- SerialPortインスタンスを作成してそれに対して書き込みする
+
+```rs
+lazy_static! {
+    pub static ref SERIAL1: Mutex<SerialPort> = {
+        let mut serial_port = unsafe { SerialPort::new(0x3F8) };
+        serial_port.init();
+        Mutex::new(serial_port)
+    };
+}
+```
+
+- `lazy_static` と `Mutex` で static な Writeインスタンスを作成
+- `Mutex` によって lock とってから操作するので安全
+- Macroを実装
+
+```rs
+/// シリアルインターフェースを通じてホストに出力する。
+#[macro_export]
+macro_rules! serial_print {
+    ($($arg:tt)*) => {
+        $crate::serial::_print(format_args!($($arg)*));
+    };
+}
+
+/// シリアルインターフェースを通じてホストに出力し、改行を末尾に追加する。
+#[macro_export]
+macro_rules! serial_println {
+    () => ($crate::serial_print!("\n"));
+    ($fmt:expr) => ($crate::serial_print!(concat!($fmt, "\n")));
+    ($fmt:expr, $($arg:tt)*) => ($crate::serial_print!(
+        concat!($fmt, "\n"), $($arg)*));
+}
+```
+
+- `$fmt:expr`, `$($arg:tt)*` あたりの表記がよくわかっていない
+    - https://doc.rust-jp.rs/rust-by-example-ja/macros/designators.html
+    - Macroの識別子ぽかった
+    - [memo] ちゃんと理解しとく
