@@ -4,6 +4,8 @@ use lazy_static::lazy_static;
 use spin::Mutex;
 use volatile::Volatile;
 
+use crate::{serial_print, serial_println};
+
 /// Macro
 #[macro_export]
 macro_rules! print {
@@ -161,4 +163,15 @@ lazy_static! {
         color_code: ColorCode::new(Color::Yellow, Color::Black),
         buffer: unsafe { &mut *(0xb8000 as *mut Buffer) }
     });
+}
+
+// 出力した文字列が本当に画面に写っているかを確かめるテストケース
+#[test_case]
+fn test_println_output() {
+    let s = "Some test string that fits on a single line";
+    println!("{}", s);
+    for (i, c) in s.chars().enumerate() {
+        let screen_char = WRITER.lock().buffer.chars[BUFFER_HEIGHT - 2][i].read();
+        assert_eq!(char::from(screen_char.ascii_character), c);
+    }
 }

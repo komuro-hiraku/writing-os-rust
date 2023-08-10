@@ -1,4 +1,3 @@
-
 use core::fmt::{Arguments, Write};
 
 use lazy_static::lazy_static;
@@ -6,11 +5,8 @@ use spin::Mutex;
 use uart_16550::SerialPort;
 
 lazy_static! {
-
     pub static ref SERIAL1: Mutex<SerialPort> = {
-        let mut serial_port = unsafe {
-            SerialPort::new(0x3F8)
-        };
+        let mut serial_port = unsafe { SerialPort::new(0x3F8) };
         serial_port.init();
         Mutex::new(serial_port)
     };
@@ -18,7 +14,10 @@ lazy_static! {
 
 #[doc(hidden)]
 pub fn _print(args: Arguments) {
-    SERIAL1.lock().write_fmt(args).expect("Printing to serial failed");
+    SERIAL1
+        .lock()
+        .write_fmt(args)
+        .expect("Printing to serial failed");
 }
 
 #[macro_export]
