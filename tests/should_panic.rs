@@ -11,7 +11,10 @@ use blog_os::{serial_println, exit_qemu, serial_print};
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-    test_main();
+    // test_main();
+    should_fail();
+    serial_println!("[test did not panic]");
+    exit_qemu(blog_os::QemuExitCode::Failed);
     loop {}
 }
 
@@ -35,7 +38,7 @@ fn panic(_info: &PanicInfo) -> ! {
 }
 
 // このやり方だと PanicHandler以降プログラムが継続できないので1個しかテストが実行できない
-#[test_case]
+// #[test_case]
 fn should_fail() {
     serial_print!("should_panic::should_fail...\t");
     assert_eq!(0, 1);   // 絶対失敗するやつ
